@@ -17,3 +17,10 @@ module QuizApp
     # the framework and any gems in your application.
   end
 end
+config.generators do |g|
+  g.test_framework :rspec,
+        view_specs: true,
+        helper_specs: true,
+        controller_specs: true,
+        routing_specs: true
+end
