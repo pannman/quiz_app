@@ -1,30 +1,4 @@
-# A sample Guardfile
-# More info at https://github.com/guard/guard#readme
-
-## Uncomment and set this to only include directories you want to watch
-# directories %w(app lib config test spec features) \
-#  .select{|d| Dir.exist?(d) ? d : UI.warning("Directory #{d} does not exist")}
-
-## Note: if you are using the `directories` clause above and you are not
-## watching the project directory ('.'), then you will want to move
-## the Guardfile to a watched dir and symlink it back, e.g.
-#
-#  $ mkdir config
-#  $ mv Guardfile config/
-#  $ ln -s config/Guardfile .
-#
-# and, you'll have to watch "config/Guardfile" instead of "Guardfile"
-
-# Note: The cmd option is now required due to the increasing number of ways
-#       rspec may be run, below are examples of the most common uses.
-#  * bundler: 'bundle exec rspec'
-#  * bundler binstubs: 'bin/rspec'
-#  * spring: 'bin/rspec' (This will use spring if running and you have
-#                          installed the spring binstubs per the docs)
-#  * zeus: 'zeus rspec' (requires the server to be started separately)
-#  * 'just' rspec: 'rspec'
-
-guard :rspec, cmd: "bundle exec spring rspec" do
+guard :rspec, cmd: "bundle exec rspec" do
   require "guard/rspec/dsl"
   dsl = Guard::RSpec::Dsl.new(self)
 
@@ -67,4 +41,55 @@ guard :rspec, cmd: "bundle exec spring rspec" do
   watch(%r{^spec/acceptance/steps/(.+)_steps\.rb$}) do |m|
     Dir[File.join("**/#{m[1]}.feature")][0] || "spec/acceptance"
   end
+
+  watch(%r{^app/controllers/(.*?)_controller\.rb$}) do |matches|
+    resource_tests(matches[1])
+  end
+  watch(%r{^app/views/([^/]*?)/.*\.html\.erb$}) do |matches|
+    ["test/controllers/#{matches[1]}_controller_test.rb"] +
+    features(matches[1])
+  end
+  watch(%r{^app/helpers/(.*?)_helper\.rb$}) do |matches|
+    features(matches[1])
+  end
+
+
+
+
+#   watch('app/views/layouts/application.html.erb') do
+#     'test/integration/site_layout_test.rb'
+#   end
+#   watch('app/helpers/sessions_helper.rb') do
+#     integration_tests << 'test/helpers/sessions_helper_test.rb'
+#   end
+#   watch('app/controllers/sessions_controller.rb') do
+#     ['test/controllers/sessions_controller_test.rb',
+#      'test/integration/users_login_test.rb']
+#   end
+#   watch('app/controllers/account_activations_controller.rb') do
+#     'test/integration/users_signup_test.rb'
+#   end
+#   watch(%r{app/views/users/*}) do
+#     resource_tests('users') +
+#     ['test/integration/microposts_interface_test.rb']
+#   end
+
+end
+
+# 与えられたリソースに対応する統合テストを返す
+def features(resource = :all)
+  if resource == :all
+    Dir["spec/features/*"]  else
+    Dir["spec/features/#{resource}_*.rb"]
+  end
+end
+
+# 与えられたリソースに対応するコントローラのテストを返す
+def controller_test(resource)
+  "spec/controllers/#{resource}_controller_test.rb"
+end
+
+# 与えられたリソースに対応するすべてのテストを返す
+def resource_tests(resource)
+  features(resource) << controller_test(resource)
 end

@@ -1,4 +1,8 @@
 Rails.application.routes.draw do
+  get 'choices/new'
+  get 'quizzes/new'
+  get 'quiz_collections/new'
+  get 'quiz_collections/index'
   root 'static_pages#home'
   devise_for :users, controllers: {
     registrations: 'users/registrations',
